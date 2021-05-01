@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<!--
+  Based on 'Learn Raw React: Ridiculously Simple Forms'
+  See http://jamesknelson.com/learn-raw-react-ridiculously-simple-forms/
+-->
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>I'm in a React app!</title>
+    <style>
+      .ContactsView {background-color: lightblue;}
+      .ContactItem {margin-bottom: 0.8em;}
+      .ContactItem-name {margin: 0; font-size: 1em;}
+      .ContactItem-email {font-family: monospace;}
+      .ContactItem-error {background-color: pink;}
+    </style>
+  </head>
+  <body>
+    <div id="react-app"></div>
+    <script src="https://cdn.jsdelivr.net/react/0.14.0-rc1/react.js"></script>
+    <script src="https://cdn.jsdelivr.net/react/0.14.0-rc1/react-dom.js"></script>
+    <script>
+      // Components
+
+      var ContactItem = React.createClass({
+        propTypes: {
+          name: React.PropTypes.string.isRequired,
+          email: React.PropTypes.string.isRequired
+        },
+        render: function() {
+          return React.createElement('li', {className: 'ContactItem'},
+            React.createElement('h2', {className: 'ContactItem-name'}, this.props.name),
+            React.createElement('a',
+              {className: 'ContactItem-email', href: 'mailto:' + this.props.email},
+              this.props.email
+            )
+          );
+        }
+      });
+
+      var ContactForm = React.createClass({
+        propTypes: {
+          contact: React.PropTypes.object.isRequired,
+          onChange: React.PropTypes.func.isRequired,
+          onSubmit: React.PropTypes.func.isRequired
+        },
+        onNameChange: function(e) {
+          this.props.onChange(Object.assign({}, this.props.contact, {name: e.target.value}));
+        },
+        onEmailChange: function(e) {
+          this.props.onChange(Object.assign({}, this.props.contact, {email: e.target.value}));
+        },
+        onSubmit: function(e) {
+          e.preventDefault();
+          this.props.onSubmit();
+	  this.refs.name.focus();
+        },
+        render: function() {
+          return React.createElement('form', {onSubmit: this.onSubmit},
+            React.createElement('input', {
+	      ref: 'name',
+              name: 'name',
+              placeholder: 'Name',
+              value: this.props.contact.name,
+	      className: this.props.contact.errors.name && 'ContactItem-error',
+              onChange: this.onNameChange
+            }),
+            React.createElement('input', {
+	      ref: 'email',
+              name: 'email',
+              placeholder: 'Email',
+              value: this.props.contact.email,
+	      className: this.props.contact.errors.email && 'ContactItem-error',
+              onChange: this.onEmailChange
+            }),
+            React.createElement('button', {type: 'submit'}, 'Submit'),
+            React.createElement('ul', {},
+              this.props.contact.errors.name &&
+                React.createElement('li', {}, this.props.contact.errors.name),
+              this.props.contact.errors.email &&
+                React.createElement('li', {}, this.props.contact.errors.email)
+            )
+          );
+        },
+	componentDidMount: function() {
+	  this.refs.name.focus();
+	},
+	componentDidUpdate: function(prevProps) {
+	  if (this.isMounted && this.props.contact.errors != prevProps.contact.errors) {
+	    if (this.props.contact.errors.name) {
+	      this.refs.name.focus();
+	    }
+	    else if (this.props.contact.errors.email) {
+	      this.refs.email.focus();
+	    }
+	  }
+	}
+      });
+
+      var ContactsView = React.createClass({
+        propTypes: {
+          contacts: React.PropTypes.array.isRequired,
+          newContact: React.PropTypes.object.isRequired,
+          onNewContactChange: React.PropTypes.func.isRequired,
+          onNewContactSubmit: React.PropTypes.func.isRequired
+        },
+        render: function() {
+          return React.createElement('div', {className: 'ContactsView'},
+            React.createElement('h1', {}, 'Contacts'),
+            React.createElement('ul', {},
+              this.props.contacts.map(function(contact) {
+                return React.createElement(ContactItem, contact);
+              })
+            ),
+            React.createElement(ContactForm, {
+              contact: this.props.newContact,
+              onChange: this.props.onNewContactChange,
+              onSubmit: this.props.onNewContactSubmit
+            })
+          );
+        }
+      });
+
+      // Actions
+
+      function updateNewContact(contact) {
+        setState({newContact: contact});
+      }
+
+      function submitNewContact() {
+        var contact = Object.assign({}, state.newContact,
+          {key: state.contacts.length + 1, errors: {}}
+        );
+        if (contact.name == '') {
+          contact.errors['name'] = 'Name cannot be empty';
+        }
+        if (contact.email == '') {
+          contact.errors['email'] = 'Email cannot be empty';
+        }
+        if (Object.keys(contact.errors).length === 0) {
+	  var contacts = state.contacts.slice(0).concat(contact);
+          setState({contacts: contacts, newContact: newContactTemplate});
+        }
+        else {
+          setState({contacts: state.contacts, newContact: contact});
+        }
+      }
+
+      // Model
+
+      var newContactTemplate = {name: '', email: '', errors: {}};
+      var state = {};
+      function setState(changes) {
+        Object.assign(state, changes);
+	console.log(state);
+        var rootElement = React.createElement(ContactsView, {
+          contacts: state.contacts,
+          newContact: state.newContact,
+          onNewContactChange: updateNewContact,
+          onNewContactSubmit: submitNewContact
+        });
+        ReactDOM.render(rootElement, document.getElementById('react-app'));
+      }
+      setState({
+        contacts: [
+          {key: 'contact1', name: 'James Nelson', email: 'james@jamesknelson.com'},
+          {key: 'contact2', name: 'Joe Citizen', email: 'j.citizen@example.org'}
+        ],
+        newContact: newContactTemplate
+      });
+    </script>
+  </body>
+</html>

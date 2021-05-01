@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<!--
+  Based on 'Learn Raw React — no JSX, no Flux, no ES6, no Webpack…'
+  See http://jamesknelson.com/learn-raw-react-no-jsx-flux-es6-webpack/
+-->
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>I'm in a React app!</title>
+    <style>
+      .ContactsView {background-color: lightblue;}
+      .ContactItem {margin-bottom: 0.8em;}
+      .ContactItem-name {margin: 0; font-size: 1em;}
+      .ContactItem-email {font-family: monospace;}
+    </style>
+  </head>
+  <body>
+    <div id="react-app"></div>
+    <script src="https://cdn.jsdelivr.net/react/0.14.0-rc1/react.js"></script>
+    <script src="https://cdn.jsdelivr.net/react/0.14.0-rc1/react-dom.js"></script>
+    <script>
+      var ContactItem = React.createClass({
+        propTypes: {
+          name: React.PropTypes.string.isRequired,
+          email: React.PropTypes.string.isRequired
+        },
+        render: function() {
+          return React.createElement('li', {className: 'ContactItem'},
+            React.createElement('h2', {className: 'ContactItem-name'}, this.props.name),
+            React.createElement('a',
+              {className: 'ContactItem-email', href: 'mailto:' + this.props.email},
+              this.props.email)
+          );
+        }
+      });
+
+      var ContactForm = React.createClass({
+        propTypes: {
+          contact: React.PropTypes.object.isRequired,
+        },
+        render: function() {
+          return React.createElement('form', {},
+            React.createElement('input', {
+              name: 'name',
+              placeholder: 'Name',
+              value: this.props.contact.name
+            }),
+            React.createElement('input', {
+              name: 'email',
+              placeholder: 'Email',
+              value: this.props.contact.email
+            }),
+            React.createElement('button', {type: 'submit'}, 'Submit')
+          );
+        }
+      });
+
+      var ContactsView = React.createClass({
+        propTypes: {
+          contacts: React.PropTypes.array.isRequired
+        },
+        render: function() {
+          return React.createElement('div', {className: 'ContactsView'},
+            React.createElement('h1', {}, 'Contacts'),
+            React.createElement('ul', {},
+              this.props.contacts.map(function(contact) {
+                return React.createElement(ContactItem, contact);
+              })
+            ),
+            React.createElement(ContactForm, {contact: {name: "", email: ""}})
+          );
+        }
+      });
+
+      var contacts = [
+        {key: 'contact1', name: 'James Nelson', email: 'james@jamesknelson.com'},
+        {key: 'contact2', name: 'Joe Citizen', email: 'j.citizen@example.org'}
+      ];
+      var rootElement = React.createElement(ContactsView, {contacts: contacts});
+      ReactDOM.render(rootElement, document.getElementById('react-app'));
+
+      var updateThenRender = function() {
+        contacts[1].name = 'Jane Citizen';
+        ReactDOM.render(rootElement, document.getElementById('react-app'));
+      };
+      setTimeout(updateThenRender, 2000);
+    </script>
+  </body>
+</html>
